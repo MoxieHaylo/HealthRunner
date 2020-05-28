@@ -1,0 +1,18 @@
+Design Doc
+
+Player moves from left to right/ bottom to to top before timer/ health runs out
+
+Platformer
+- level is a spiral
+- some areas require interaction with NPC to get past
+	- custom command called with YarnSpinner
+	- talking to NPC will create a bridge/ open door etc
+
+Health crates | OnCollision
+
+//- play audio
+//- deal damage (20% of remaining health)
+//- play particle effect
+//- wait 5
+//- begin heal player (50% of total health)
+//- destroy self
