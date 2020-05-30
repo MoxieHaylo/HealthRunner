@@ -1,34 +1,86 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed;
-    Vector3 jump;
-    public float jumpForce;
-    private Rigidbody rb;
-    public bool isGrounded;
     private PlayerHealth playerHealth;
+    private PlayerControls inputActions;
+    private Vector2 movemmentInput;
 
+    [SerializeField]
+    private float moveSpeed = 5f;
+    private Vector3 moveDirection;
+    private Vector3 moveVector;
+    private Quaternion currentRotation;
+    public bool isGrounded;
+
+    private Rigidbody rb;
     public GameObject model;
+
+    private void Awake()
+    {
+        inputActions = new PlayerControls();
+        inputActions.Gameplay.Movement.performed += ctx => movemmentInput = ctx.ReadValue<Vector2>();
+    }
+
+    void Move(Vector3 desiredDirection)
+    {
+        moveVector.Set(desiredDirection.x, 0, desiredDirection.z);
+        moveVector = moveVector * moveSpeed * Time.deltaTime;
+        transform.position += moveVector;
+    }
+
+    void Turn(Vector3 desiredDirection)
+    {
+        if ((desiredDirection.x > 0.1 || desiredDirection.x < -0.1) || (desiredDirection.z > 0.1 || desiredDirection.z < -0.1))
+        {
+            currentRotation = Quaternion.LookRotation(desiredDirection);
+            transform.rotation = currentRotation;
+        }
+        else
+        {
+            transform.rotation = currentRotation;
+        }
+    }
+
+    private void OnEnable()
+    {
+        inputActions.Enable();
+    }
+
+    private void OnDisable()
+    {
+        inputActions.Disable();
+    }
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
         playerHealth = GameObject.Find("Player").GetComponent<PlayerHealth>();
-        jump = new Vector3(0f, 2f, 0f);
     }
 
     private void Update()
     {
         if(playerHealth.isAlive==true)
         {
-            print("can move");
-            if(Input.GetKey(KeyCode.D)|)
-            {
-                transform.position += transform.forward * Time.deltaTime * speed;
-            }
+            float h = movemmentInput.x;
+            float v = movemmentInput.y;
+
+            Vector3 targetInput = new Vector3(h, 0, v);
+
+            moveDirection = Vector3.Lerp(moveDirection, targetInput, Time.deltaTime * 5f);
+
+            Vector3 cameraForward = Camera.main.transform.forward;
+            Vector3 cameraRight = Camera.main.transform.right;
+            cameraForward.y = 0f;
+            cameraRight.y = 0f;
+
+            Vector3 desiredDirection = cameraForward * moveDirection.z + cameraRight * moveDirection.x;
+
+            Move(desiredDirection);
+            Turn(desiredDirection);
         }
         if(playerHealth.isAlive==false)
         {
